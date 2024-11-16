@@ -1,68 +1,107 @@
 import Foundation
 import SwiftUI
+import SDWebImageSwiftUI
 import AVFoundation
+//            LottieView(animationName: lottieAnimationName, isPlaying: $speechService.isPlaying)
+//            .scaledToFill()
+//            .frame(width: 300, height: 300)
+//            .clipShape(Circle())
+//            .overlay(Circle().stroke(Color.black, lineWidth: 4))
+//            .shadow(radius: 10)
 
 struct VoiceInteractionView: View {
+    let character: Character
     @StateObject private var speechService = AudioService()
     @State private var translatedText: String = ""
+    @Environment(\.presentationMode) var presentationMode
     @State private var isProcessing: Bool = false
     @State private var audioPlayer: AVAudioPlayer?
     
     private let lottieAnimationName: String = "abay.mp4.lottie"
+    private let gifURL = URL(string: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif")!
     let kazLLMAPI = KazLLMAPI()
     let soyleAPI = SoyleAPI()
-    
+   
     var body: some View {
-        VStack {
-            // Lottie Animation
-            LottieView(animationName: lottieAnimationName, isPlaying: $speechService.isPlaying)
+            ZStack {
+                Image("soyleWallpaper")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: UIScreen.main.bounds.height + 50)
+                    .ignoresSafeArea()
+                    .ignoresSafeArea()
+                VStack {
+                    // Main content
+                    Spacer()
+                    AnimatedImage(url: URL(string: character.videoURL), isAnimating: $speechService.isPlaying)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 300, height: 300)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.black, lineWidth: 4))
+                        .shadow(radius: 10)
 
-            // Button to start/stop recording
-            Button(action: handleMicTap) {
-                Image(systemName: speechService.isRecording ? "mic.fill" : "mic.slash.fill")
-                    .font(.system(size: 50))
-                    .foregroundColor(.white)
-                    .padding(40)
-                    .background(speechService.isRecording ? Color.red : Color.blue)
-                    .clipShape(Circle())
-            }
-            .padding(.top, 50)
+                    Spacer()
 
-            // Play Recording Button
-            if !speechService.base64Audio.isEmpty {
-                Button(action: {
-                    speechService.playAudio()
-                }) {
-                    Text("Play Recording")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.green)
-                        .cornerRadius(10)
+                    Button(action: handleMicTap) {
+                        Image(systemName: speechService.isRecording ? "mic.fill" : "mic.slash.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(speechService.isRecording ? .black : .white)
+                            .padding(40)
+                            .background(speechService.isRecording ? Color.white : Color.black)
+                            .clipShape(Circle())
+                    }
+                    .padding(.top, 50)
+                    Spacer()
                 }
-                .padding(.top, 20)
+                .padding()
+                .onReceive(speechService.$base64Audio) { base64Audio in
+                    if !base64Audio.isEmpty {
+                        processAudio(base64Audio: base64Audio)
+                    }
+                }
+                .onDisappear {
+                    speechService.stopRecording()
+                }
+
+                // Custom Back Button
+                VStack {
+                    HStack {
+                        Button(action: {
+                            presentationMode.wrappedValue.dismiss() // Dismiss the current view
+                        }) {
+                            ZStack {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.8))
+                                    .frame(width: 40, height: 40)
+                                    .cornerRadius(8)
+                                Image(systemName: "xmark")
+                                    .foregroundColor(.white)
+                                    .font(.headline)
+                            }
+                        }
+                        .padding([.top, .leading], 60)
+                        .padding(.top, 40)
+
+                        Spacer()
+                    }
+                    Spacer()
+                }
             }
+            .navigationBarBackButtonHidden(true)
         }
-        .background(.white)
-        .onReceive(speechService.$base64Audio) { base64Audio in
-            if !base64Audio.isEmpty {
-                processAudio(base64Audio: base64Audio)
-            }
-        }
-        .onDisappear {
-            speechService.stopRecording()
-        }
-    }
     
     private func processAudio(base64Audio: String) {
             isProcessing = true
             translatedText = ""
             
             // Translate the audio to text
+            print("PROCESSED AUDIO")
             soyleAPI.translateAudio(targetLanguage: "kaz", audioBase64: base64Audio) { result in
                 DispatchQueue.main.async {
                     switch result {
                     case .success(let text):
+                        print("PROCESSED AUDIO")
                         self.createInteractionWithKazLLM(text: text)
                     case .failure(let error):
                         self.isProcessing = false
@@ -79,6 +118,7 @@ struct VoiceInteractionView: View {
                 DispatchQueue.main.async {
                     switch interactionResult {
                     case .success(let interactionResponse):
+                        print("CREATED INTERACTION")
                         self.synthesizeResponse(interactionResponse.vllmResponse.content)
                     case .failure(let error):
                         self.isProcessing = false
@@ -87,15 +127,15 @@ struct VoiceInteractionView: View {
             }
         }
     
-    private func synthesizeResponse(_ unicodeString: String) {
+    private func synthesizeResponse(_ string: String) {
         print("UNICODE")
-        print(unicodeString)
-        soyleAPI.translateText(sourceLanguage: "kaz", targetLanguage: "kaz", text: unicodeString) { result in
+        print(string)
+        soyleAPI.translateText(sourceLanguage: "kaz", targetLanguage: "kaz", text: string) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let audioBase16):
                     if let audioData = Data(hexString: audioBase16) {
-                        
+                        print("got Base16")
                         let audioBase64 = audioData.base64EncodedString()
                         self.playAudioFromBase64(audioBase64)
                     } else {
@@ -111,18 +151,7 @@ struct VoiceInteractionView: View {
     
     private func playAudioFromBase64(_ base64: String) {
         guard let audioData = Data(base64Encoded: base64) else { return }
-        if let audioData = Data(base64Encoded: base64) {
-            let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("test.m4a")
-            try? audioData.write(to: fileURL)
-            print("Audio written to: \(fileURL)")
-        }
-//        do {
             speechService.playAudio(fromBase64: base64)
-//            audioPlayer = try AVAudioPlayer(data: audioData)
-//            audioPlayer?.play()
-//        } catch {
-//            print("Error playing audio: \(error.localizedDescription)")
-//        }
     }
 
     private func handleMicTap() {

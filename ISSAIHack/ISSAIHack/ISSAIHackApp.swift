@@ -11,7 +11,7 @@ import SwiftUI
 struct ISSAIHackApp: App {
     var body: some Scene {
         WindowGroup {
-            VoiceInteractionView()
+            CharacterSelectionView()
         }
     }
 }
