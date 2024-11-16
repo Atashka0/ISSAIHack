@@ -110,7 +110,6 @@ struct SoyleAPI {
             do {
                 if let responseJSON = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
                    let translatedText = responseJSON["audio"] as? String {
-                    print("returned base64 audio")
                     completion(.success(translatedText))
                 } else {
                     completion(.failure(NSError(domain: "Invalid JSON Response", code: 0, userInfo: nil)))
