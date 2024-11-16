@@ -53,12 +53,13 @@ final class SpeechToBase64Service: ObservableObject {
                 print(base64Result)
             } catch {
                 self.error = error
+                print(error)
             }
         }
     }
     
     func reset() {
-        base64Result = ""
+        base64Result = "NULL"
         error = nil
     }
 }
