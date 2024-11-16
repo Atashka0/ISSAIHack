@@ -1,69 +1,54 @@
-import UIKit
+import Foundation
 import SwiftUI
-import Lottie
+import AVFoundation
 
 struct VoiceInteractionView: View {
-    private let lottieAnimationName = "abay.mp4.lottie"
-    @StateObject private var service = SpeechToBase64Service()
-    @State private var apiResult: String = "" // State to store the API result
-    @State private var isLoading: Bool = false // State to show loading status
+    @StateObject private var speechService = SpeechToBase64Service()
+    @State private var translatedText: String = ""
+    @State private var kazLLMResponse: String = ""
+    @State private var isProcessing: Bool = false
+    @State private var audioPlayer: AVAudioPlayer?
+    
     let soyleAPI = SoyleAPI()
+    let kazLLMAPI = KazLLMAPI()
     
     var body: some View {
         VStack {
-            // Lottie Animation
-            LottieView(animationName: lottieAnimationName, isPlaying: $service.isRecording)
-
-            // Button to start/stop recording
+            // Microphone button to start/stop recording
             Button(action: handleMicTap) {
-                Image(systemName: "mic.fill")
+                Image(systemName: speechService.isRecording ? "mic.fill" : "mic.slash.fill")
                     .font(.system(size: 50))
                     .foregroundColor(.white)
                     .padding(40)
-                    .background(
-                        ZStack {
-                            if service.isRecording {
-                                PulsatingCircle(color: Color.red)
-                            } else {
-                                Circle()
-                                    .fill(Color.blue)
-                            }
-                        }
-                    )
+                    .background(speechService.isRecording ? Color.red : Color.blue)
+                    .clipShape(Circle())
             }
-            .padding(.top, 50)
             
-            // New Button to Test API Call Directly
-            
-            // Loading Indicator
-            if isLoading {
+            if isProcessing {
                 ProgressView("Processing...")
                     .padding()
             }
             
-            // API Result
-            if !apiResult.isEmpty {
-                Text("API Response:")
+            // Display KazLLM response
+            if !kazLLMResponse.isEmpty {
+                Text("KazLLM Response:")
                     .font(.headline)
-                    .padding(.top, 20)
-                Text(apiResult)
+                Text(kazLLMResponse)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
                     .padding()
             }
         }
+        .padding()
         .background(
             LinearGradient(
                 gradient: Gradient(colors: [Color.black, Color.purple]),
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .edgesIgnoringSafeArea(.all)
         )
-        .onDisappear {
-            service.stopRecording()
-        }
-        .onReceive(service.$base64Audio) { base64Audio in
+        .edgesIgnoringSafeArea(.all)
+        .onReceive(speechService.$base64Audio) { base64Audio in
             if !base64Audio.isEmpty {
                 processAudio(base64Audio: base64Audio)
             }
@@ -71,52 +56,75 @@ struct VoiceInteractionView: View {
     }
     
     private func handleMicTap() {
-        if service.isRecording {
-            service.stopRecording()
+        if speechService.isRecording {
+            speechService.stopRecording()
         } else {
-            service.startRecording()
+            speechService.startRecording()
         }
     }
     
     private func processAudio(base64Audio: String) {
-        soyleAPI.checkAPI()
-        isLoading = true
-        soyleAPI.translateAudio(
-            targetLanguage: "eng",
-            audioBase64: base64Audio
-        ) { result in
+        isProcessing = true
+        translatedText = ""
+        kazLLMResponse = ""
+        
+        // Translate the audio to text
+        soyleAPI.translateAudio(targetLanguage: "kaz", audioBase64: base64Audio) { result in
             DispatchQueue.main.async {
-                isLoading = false
                 switch result {
-                case .success(let response):
-                    apiResult = response
+                case .success(let text):
+                    self.createInteractionWithKazLLM(text: text)
                 case .failure(let error):
-                    apiResult = "Error: \(error.localizedDescription)"
+                    self.isProcessing = false
+                    self.translatedText = "Error translating audio: \(error.localizedDescription)"
                 }
             }
         }
     }
-}
-
-struct PulsatingCircle: View {
-    var color: Color
-    @State private var pulsate = false
     
-    var body: some View {
-        Circle()
-            .fill(color)
-            .scaleEffect(pulsate ? 1.2 : 1.0)
-            .onAppear {
-                pulsateAnimation()
+    private func createInteractionWithKazLLM(text: String) {
+        let assistantID = 84
+        
+        kazLLMAPI.createInteraction(assistantID: assistantID, textPrompt: text) { interactionResult in
+            DispatchQueue.main.async {
+                switch interactionResult {
+                case .success(let interactionResponse):
+                    self.kazLLMResponse = interactionResponse.vllmResponse.content
+                    self.synthesizeResponse(interactionResponse.vllmResponse.content)
+                case .failure(let error):
+                    self.isProcessing = false
+                    self.kazLLMResponse = "Error creating interaction: \(error.localizedDescription)"
+                }
             }
-            .onDisappear {
-                pulsate = false
-            }
+        }
     }
     
-    private func pulsateAnimation() {
-        withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-            pulsate = true
+    private func synthesizeResponse(_ unicodeString: String) {
+        if let decodedString = unicodeString.applyingTransform(.init("Any-Hex/Unicode"), reverse: false) {
+            print("Decoded String: \(decodedString)")
+            soyleAPI.translateText(sourceLanguage: "kaz", targetLanguage: "kaz", text: decodedString) { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let audioBase64):
+                        print("Synthesized Audio Base64: \(audioBase64)")
+                    case .failure(let error):
+                        print("Failed to synthesize response: \(error.localizedDescription)")
+                    }
+                }
+            }
+        } else {
+            print("Failed to decode Unicode string")
+        }
+    }
+    
+    private func playAudioFromBase64(_ base64: String) {
+        guard let audioData = Data(base64Encoded: base64) else { return }
+        
+        do {
+            audioPlayer = try AVAudioPlayer(data: audioData)
+            audioPlayer?.play()
+        } catch {
+            print("Error playing audio: \(error.localizedDescription)")
         }
     }
 }

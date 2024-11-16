@@ -101,9 +101,9 @@ struct KazLLMAPI {
         completion: @escaping (Result<InteractionResponse, Error>) -> Void
     ) {
         let payload: [String: Any] = [
-            "text_prompt": textPrompt,
-            "file_prompt": NSNull()
+            "text_prompt": textPrompt
         ]
+        print(textPrompt)
         
         guard let body = try? JSONSerialization.data(withJSONObject: payload) else {
             fatalError("Failed to serialize JSON")
@@ -125,6 +125,15 @@ struct KazLLMAPI {
                 completion(.failure(NSError(domain: "No Data", code: 0, userInfo: nil)))
                 return
             }
+            
+            do {
+                    if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                        print("Response JSON: \(jsonObject)")
+                    }
+                } catch {
+                    print("Failed to parse JSON for debugging: \(error.localizedDescription)")
+                }
+            print("DATA CAME")
             
             do {
                 let response = try JSONDecoder().decode(InteractionResponse.self, from: data)
@@ -150,9 +159,14 @@ struct Assistant: Codable {
 
 struct InteractionResponse: Codable {
     let id: Int
-    let textPrompt: String
     let filePrompt: Int?
     let vllmResponse: VLLMResponse
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case filePrompt = "file_prompt"
+        case vllmResponse = "vllm_response"
+    }
 }
 
 struct VLLMResponse: Codable {
@@ -162,7 +176,17 @@ struct VLLMResponse: Codable {
     let outputTokenCount: Int
     let totalTokensCount: Int
     let createdAt: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case content
+        case promptTokenCount = "prompt_token_count"
+        case outputTokenCount = "output_token_count"
+        case totalTokensCount = "total_tokens_count"
+        case createdAt = "created_at"
+    }
 }
+
 
 struct SimpleAssistant: Codable {
     let id: Int
