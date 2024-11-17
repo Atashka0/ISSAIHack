@@ -2,12 +2,7 @@ import Foundation
 import SwiftUI
 import SDWebImageSwiftUI
 import AVFoundation
-//            LottieView(animationName: lottieAnimationName, isPlaying: $speechService.isPlaying)
-//            .scaledToFill()
-//            .frame(width: 300, height: 300)
-//            .clipShape(Circle())
-//            .overlay(Circle().stroke(Color.black, lineWidth: 4))
-//            .shadow(radius: 10)
+
 
 struct VoiceInteractionView: View {
     let character: Character
@@ -15,7 +10,10 @@ struct VoiceInteractionView: View {
     @State private var translatedText: String = ""
     @Environment(\.presentationMode) var presentationMode
     @State private var isProcessing: Bool = false
+    @State private var responseContent: String = ""
     @State private var audioPlayer: AVAudioPlayer?
+    @State private var displayedContent: String = ""
+    @State private var timer: Timer? = nil
     
     private let lottieAnimationName: String = "abay.mp4.lottie"
     private let gifURL = URL(string: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif")!
@@ -33,6 +31,7 @@ struct VoiceInteractionView: View {
                 VStack {
                     // Main content
                     Spacer()
+                    Spacer()
                     AnimatedImage(url: URL(string: character.gifUrl), isAnimating: $speechService.isPlaying)
                         .resizable()
                         .scaledToFill()
@@ -40,6 +39,19 @@ struct VoiceInteractionView: View {
                         .clipShape(Circle())
                         .overlay(Circle().stroke(Color.black, lineWidth: 4))
                         .shadow(radius: 10)
+                    Spacer()
+                    ScrollView {
+                        Text(displayedContent)
+                            .font(.title3)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                            .frame(maxWidth: .infinity) // Allow text to take full width
+                    }
+                    .frame(height: 150) // Limit the height of the text view
+                    .background(Color.black.opacity(0.3)) // Optional background for contrast
+                    .cornerRadius(10)
+                    .padding(.horizontal)
 
                     Spacer()
 
@@ -119,11 +131,28 @@ struct VoiceInteractionView: View {
             DispatchQueue.main.async {
                 switch interactionResult {
                 case .success(let interactionResponse):
-                    print("CREATED INTERACTION")
+                    self.responseContent = interactionResponse.vllmResponse.content
+                    self.displayContentLetterByLetter()
                     self.synthesizeResponse(interactionResponse.vllmResponse.content)
                 case .failure(let error):
                     self.isProcessing = false
                 }
+            }
+        }
+    }
+    
+    private func displayContentLetterByLetter() {
+        displayedContent = "" // Reset the displayed content
+        timer?.invalidate() // Cancel any existing timer
+        var currentIndex = 0
+
+        timer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { timer in
+            if currentIndex < self.responseContent.count {
+                let index = self.responseContent.index(self.responseContent.startIndex, offsetBy: currentIndex)
+                self.displayedContent.append(self.responseContent[index])
+                currentIndex += 1
+            } else {
+                timer.invalidate()
             }
         }
     }
