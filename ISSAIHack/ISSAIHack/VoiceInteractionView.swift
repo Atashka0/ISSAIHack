@@ -71,10 +71,12 @@ struct VoiceInteractionView: View {
                             presentationMode.wrappedValue.dismiss() // Dismiss the current view
                         }) {
                             ZStack {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.8))
+                                Image("woodBackground") // Use the custom background image
+                                    .resizable()
+                                    .scaledToFill()
                                     .frame(width: 40, height: 40)
                                     .cornerRadius(8)
+
                                 Image(systemName: "xmark")
                                     .foregroundColor(.white)
                                     .font(.headline)

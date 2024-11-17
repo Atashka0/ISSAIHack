@@ -231,21 +231,25 @@ struct CharacterSelectionView: View {
                                 Button(action: {
                                     navigateToVoiceInteraction = true
                                 }) {
-                                    Text("Confirm")
+                                    Text("Растау")
                                         .font(.title2)
                                         .foregroundColor(.white)
                                         .padding()
                                         .frame(maxWidth: .infinity)
-                                        .background(Color.black)
+                                        .background(
+                                                Image("woodBackground") 
+                                                    .resizable()
+                                                    .scaledToFill()
+                                            )
                                         .cornerRadius(10)
                                         .padding(.horizontal)
                                 }
                             }
                         } else {
-                            Text("Please select a valid character.")
-                                .font(.title)
-                                .foregroundColor(.white)
-                                .padding()
+//                            Text("Please select a valid character.")
+//                                .font(.title)
+//                                .foregroundColor(.white)
+//                                .padding()
                         }
                     }
                     .background {
