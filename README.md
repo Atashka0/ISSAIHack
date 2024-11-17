@@ -31,9 +31,11 @@ Attachments from App:
 <img width="348" alt="image" src="https://github.com/user-attachments/assets/a79ab797-6153-43d9-ba97-cc614cf4d0fb">
 <img width="350" alt="image" src="https://github.com/user-attachments/assets/07560576-aeb3-461b-9583-59246d25bd76">
 
+
 Avatar creation form:
 
 <img width="351" alt="image" src="https://github.com/user-attachments/assets/a46c44c6-cb47-4ca8-98b3-d087f4dc83e1">
+
 
 State when a new avatar is being generated:
 
