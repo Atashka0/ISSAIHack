@@ -33,7 +33,7 @@ struct VoiceInteractionView: View {
                 VStack {
                     // Main content
                     Spacer()
-                    AnimatedImage(url: URL(string: character.videoURL), isAnimating: $speechService.isPlaying)
+                    AnimatedImage(url: URL(string: character.gifUrl), isAnimating: $speechService.isPlaying)
                         .resizable()
                         .scaledToFill()
                         .frame(width: 300, height: 300)

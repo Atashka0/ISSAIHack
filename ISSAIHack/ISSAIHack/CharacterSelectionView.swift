@@ -2,13 +2,6 @@ import SwiftUI
 import SDWebImageSwiftUI
 import PhotosUI
 
-struct Character: Identifiable {
-    let id: Int
-    let name: String
-    let videoURL: String
-    let voice: String
-}
-
 struct AddCharacterCardView: View {
     @Binding var characters: [Character]
     @State private var isFormPresented = false
@@ -176,86 +169,114 @@ struct AddCharacterForm: View {
 
     private func addCharacter() {
         guard let image = selectedImage else { return }
-        let newCharacter = Character(
-            id: characters.count + 1,
-            name: name,
-            videoURL: "data:image/png;base64,\(image.toBase64String())",
-            voice: description
-        )
-        characters.append(newCharacter)
+//        let newCharacter = Character(
+//            id: characters.count + 1,
+//            name: name,
+//            videoURL: "data:image/png;base64,\(image.toBase64String())",
+//            voice: description
+//        )
+//        characters.append(newCharacter)
     }
 }
 
 struct CharacterSelectionView: View {
     @State private var selectedCharacterIndex: Int = 0
     @State private var navigateToVoiceInteraction = false
+    @State private var characters: [Character] = []
+    @State private var isLoading = true
+    @State private var errorMessage: String? = nil
 
-    @State private var characters: [Character] = [
-        Character(id: 141, name: "Томирис", videoURL: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif", voice: "Female"),
-        Character(id: 142, name: "Ер Төстік", videoURL: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif", voice: "Male"),
-        Character(id: 143, name: "Бәйтерек", videoURL: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif", voice: "Female")
-    ]
+//    @State private var characters: [Character] = [
+//        Character(id: 141, name: "Томирис", videoURL: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif", voice: "Female"),
+//        Character(id: 142, name: "Ер Төстік", videoURL: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif", voice: "Male"),
+//        Character(id: 143, name: "Бәйтерек", videoURL: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif", voice: "Female")
+//    ]
 
     var body: some View {
         ZStack {
-            NavigationView {
-                VStack {
-                    Text("Кейіпкеріңізді таңдаңыз")
-                        .font(.largeTitle)
-                        .bold()
-                        .padding()
-                    
-                    TabView(selection: $selectedCharacterIndex) {
-                        ForEach(characters.indices, id: \.self) { index in
-                            CharacterCardView(character: characters[index])
-                                .tag(index)
-                        }
-                        
-                        AddCharacterCardView(characters: $characters)
-                            .tag(characters.count)
-                        
-                    }
-                    .tabViewStyle(.page(indexDisplayMode: .always))
-                    .frame(height: 500)
-                    
-                    Spacer()
-                    
-                    // Confirm Button
-                    if selectedCharacterIndex < characters.count {
-                        NavigationLink(
-                            destination: VoiceInteractionView(character: characters[selectedCharacterIndex]),
-                            isActive: $navigateToVoiceInteraction
-                        ) {
-                            Button(action: {
-                                navigateToVoiceInteraction = true
-                            }) {
-                                Text("Confirm")
-                                    .font(.title2)
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color.black)
-                                    .cornerRadius(10)
-                                    .padding(.horizontal)
-                            }
-                        }
-                    } else {
-                        Text("Please select a valid character.")
-                            .font(.title)
-                            .foregroundColor(.white)
+            if isLoading {
+                ProgressView("Loading characters...")
+            } else if let errorMessage = errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            } else {
+                NavigationView {
+                    VStack {
+                        Text("Кейіпкеріңізді таңдаңыз")
+                            .font(.largeTitle)
+                            .bold()
                             .padding()
+                        
+                        TabView(selection: $selectedCharacterIndex) {
+                            ForEach(characters.indices, id: \.self) { index in
+                                CharacterCardView(character: characters[index])
+                                    .tag(index)
+                            }
+                            
+                            AddCharacterCardView(characters: $characters)
+                                .tag(characters.count)
+                        }
+                        .tabViewStyle(.page(indexDisplayMode: .always))
+                        .frame(height: 500)
+                        
+                        Spacer()
+                        
+                        if selectedCharacterIndex < characters.count {
+                            NavigationLink(
+                                destination: VoiceInteractionView(character: characters[selectedCharacterIndex]),
+                                isActive: $navigateToVoiceInteraction
+                            ) {
+                                Button(action: {
+                                    navigateToVoiceInteraction = true
+                                }) {
+                                    Text("Confirm")
+                                        .font(.title2)
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color.black)
+                                        .cornerRadius(10)
+                                        .padding(.horizontal)
+                                }
+                            }
+                        } else {
+                            Text("Please select a valid character.")
+                                .font(.title)
+                                .foregroundColor(.white)
+                                .padding()
+                        }
                     }
-                }
-                .background {
-                    Image("soyleWallpaper")
-                                   .resizable()
-                                   .scaledToFill()
-                                   .frame(height: UIScreen.main.bounds.height + 50)
-                                   .ignoresSafeArea()
+                    .background {
+                        Image("soyleWallpaper")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: UIScreen.main.bounds.height + 50)
+                            .ignoresSafeArea()
+                    }
                 }
             }
         }
+        .onAppear(perform: fetchCharacters)
     }
+    
+    private func fetchCharacters() {
+            isLoading = true
+            errorMessage = nil
+            
+            CharacterAPI().fetchCharacters { result in
+                DispatchQueue.main.async {
+                    isLoading = false
+                    switch result {
+                    case .success(let fetchedCharacters):
+                        characters = fetchedCharacters
+                    case .failure(let error):
+                        errorMessage = "Failed to load characters: \(error.localizedDescription)"
+                    }
+                }
+            }
+        }
 }
 
 struct CharacterCardView: View {
@@ -263,7 +284,7 @@ struct CharacterCardView: View {
 
     var body: some View {
         VStack {
-            AnimatedImage(url: URL(string: character.videoURL))
+            AnimatedImage(url: URL(string: character.gifUrl))
                 .resizable()
                 .scaledToFill()
                 .frame(width: 300, height: 300)
