@@ -54,18 +54,15 @@ struct AddCharacterForm: View {
 
     var body: some View {
         ZStack {
-            // Background color or image
             Color(.systemGroupedBackground)
                 .ignoresSafeArea()
 
             VStack(spacing: 20) {
-                // Title
                 Text("Add New Character")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.top)
 
-                // Character Image Section
                 VStack {
                     if let image = selectedImage {
                         Image(uiImage: image)
@@ -92,29 +89,26 @@ struct AddCharacterForm: View {
                     }
                 }
 
-                // Input Fields
                 VStack(spacing: 15) {
-                    // Name Input
                     TextField("Атын енгізіңіз", text: $name)
                         .padding()
-                        .frame(height: 60) // Adjust height for a bigger input
-                        .background(Color.white) // Add a background color for clarity
-                        .cornerRadius(10) // Rounded corners
+                        .frame(height: 60)
+                        .background(Color.white)
+                        .cornerRadius(10)
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.black, lineWidth: 2) // Black border
+                                .stroke(Color.black, lineWidth: 2)
                         )
                         .padding(.horizontal)
 
-                    // Description Input
                     TextField("Қысқаша сипаттама қосыңыз", text: $description)
                         .padding()
-                        .frame(height: 60) // Adjust height for a bigger input
-                        .background(Color.white) // Add a background color for clarity
-                        .cornerRadius(10) // Rounded corners
+                        .frame(height: 60)
+                        .background(Color.white)
+                        .cornerRadius(10)
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.black, lineWidth: 2) // Black border
+                                .stroke(Color.black, lineWidth: 2)
                         )
                         .padding(.horizontal)
                 }

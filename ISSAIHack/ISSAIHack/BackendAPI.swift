@@ -17,7 +17,6 @@ struct Character: Decodable {
 class CharacterAPI {
     private let baseURL = "http://138.68.72.84:8089/api/assistant"
 
-    // MARK: - Fetch Assistants (GET)
     func fetchCharacters(completion: @escaping (Result<[Character], Error>) -> Void) {
         guard let url = URL(string: baseURL) else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
@@ -49,7 +48,6 @@ class CharacterAPI {
     }
     
 
-    // MARK: - Create Assistant (POST)
     func createAssistant(name: String, description: String, fileData: Data, completion: @escaping (Result<Int, Error>) -> Void) {
         guard let url = URL(string: baseURL) else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
@@ -59,30 +57,25 @@ class CharacterAPI {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
-        // Boundary and multipart content
         let boundary = "Boundary-\(UUID().uuidString)"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         
         var body = Data()
         
-        // Add name
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"name\"\r\n\r\n".data(using: .utf8)!)
         body.append("\(name)\r\n".data(using: .utf8)!)
         
-        // Add description
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"description\"\r\n\r\n".data(using: .utf8)!)
         body.append("\(description)\r\n".data(using: .utf8)!)
         
-        // Add file
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"file\"; filename=\"file.jpg\"\r\n".data(using: .utf8)!)
         body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
         body.append(fileData)
         body.append("\r\n".data(using: .utf8)!)
         
-        // End boundary
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
         
         request.httpBody = body
