@@ -3,7 +3,6 @@ import SwiftUI
 import SDWebImageSwiftUI
 import AVFoundation
 
-
 struct VoiceInteractionView: View {
     let character: Character
     @StateObject private var speechService = AudioService()
@@ -16,92 +15,113 @@ struct VoiceInteractionView: View {
     @State private var timer: Timer? = nil
     
     private let lottieAnimationName: String = "abay.mp4.lottie"
-
     let kazLLMAPI = KazLLMAPI()
     let soyleAPI = SoyleAPI()
    
     var body: some View {
-            ZStack {
-                Image("soyleWallpaper")
+        ZStack {
+            Image("wall")
+                .resizable()
+                .scaledToFill()
+                .frame(height: UIScreen.main.bounds.height + 50)
+                .ignoresSafeArea()
+            VStack {
+                Spacer()
+                
+                // Main Animated Image
+                AnimatedImage(url: URL(string: character.gifUrl ?? ""), isAnimating: $speechService.isPlaying)
                     .resizable()
                     .scaledToFill()
-                    .frame(height: UIScreen.main.bounds.height + 50)
-                    .ignoresSafeArea()
-                    .ignoresSafeArea()
-                VStack {
-                    Spacer()
-                    Spacer()
-                    AnimatedImage(url: URL(string: character.gifUrl ?? ""), isAnimating: $speechService.isPlaying)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 300, height: 300)
+                    .frame(width: 300, height: 300)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.black, lineWidth: 4))
+                    .shadow(radius: 10)
+                Spacer()
+
+                ScrollView {
+                                        Text(displayedContent)
+                                            .font(.title3)
+                                            .foregroundColor(.white)
+                                            .multilineTextAlignment(.center)
+                                            .frame(maxWidth: .infinity)
+                                            .padding()
+                                    }
+                                    .frame(width: 350, height: 150)
+                                    .background(Color.black.opacity(0.3))
+                                    .cornerRadius(10)
+                
+                Spacer()
+
+                // Mic Button
+                Button(action: handleMicTap) {
+                    Image(systemName: speechService.isRecording ? "mic.fill" : "mic.slash.fill")
+                        .font(.system(size: 50))
+                        .foregroundColor(speechService.isRecording ? .black : .white)
+                        .padding(40)
+                        .background(speechService.isRecording ? Color.white : Color.black)
                         .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.black, lineWidth: 4))
-                        .shadow(radius: 10)
-                    Spacer()
-                    ScrollView {
-                        Text(displayedContent)
-                            .font(.title3)
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                    }
-                    .frame(height: 150)
-                    .background(Color.black.opacity(0.3))
-                    .cornerRadius(10)
-                    .padding(.horizontal)
-
-                    Spacer()
-
-                    Button(action: handleMicTap) {
-                        Image(systemName: speechService.isRecording ? "mic.fill" : "mic.slash.fill")
-                            .font(.system(size: 50))
-                            .foregroundColor(speechService.isRecording ? .black : .white)
-                            .padding(40)
-                            .background(speechService.isRecording ? Color.white : Color.black)
-                            .clipShape(Circle())
-                    }
-                    .padding(.top, 50)
-                    Spacer()
                 }
-                .padding()
-                .onReceive(speechService.$base64Audio) { base64Audio in
-                    if !base64Audio.isEmpty {
-                        processAudio(base64Audio: base64Audio)
-                    }
-                }
-                .onDisappear {
-                    speechService.stopRecording()
-                }
-
-                VStack {
-                    HStack {
-                        Button(action: {
-                            presentationMode.wrappedValue.dismiss()
-                        }) {
-                            ZStack {
-                                Image("woodBackground")
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 40, height: 40)
-                                    .cornerRadius(8)
-
-                                Image(systemName: "xmark")
-                                    .foregroundColor(.white)
-                                    .font(.headline)
-                            }
-                        }
-                        .padding([.top, .leading], 60)
-                        .padding(.top, 40)
-
-                        Spacer()
-                    }
-                    Spacer()
+                .scaleEffect( speechService.isRecording ? 1.1 : 1.0) // Scale effect for pulsating
+                .animation(
+                    Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true),
+                    value: speechService.isRecording
+                )
+                .padding(.top, 50)
+                Spacer()
+            }
+            .padding()
+            .onReceive(speechService.$base64Audio) { base64Audio in
+                if !base64Audio.isEmpty {
+                    processAudio(base64Audio: base64Audio)
                 }
             }
-            .navigationBarBackButtonHidden(true)
+            .onDisappear {
+                speechService.stopRecording()
+            }
+            
+            // Back Button Layer
+            VStack {
+                HStack {
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss() // Navigate back
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.black.opacity(0.6))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(.white)
+                                .font(.headline)
+                        }
+                    }
+//                    .padding([.top, .leading], 20) // Align at the top-left corner
+                    Spacer()
+                }
+                Spacer()
+            }
+            
         }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    ZStack {
+                        // Rectangle background
+                        Rectangle()
+                            .fill(Color.black.opacity(0.8))
+                            .frame(width: 40, height: 40)
+                            .cornerRadius(8)
+
+                            Image(systemName: "xmark")
+                                .foregroundColor(.white)
+                                .font(.headline)
+                    }
+                }
+            }
+        }
+        .navigationBarBackButtonHidden(true) // Hides the default back button
+    }
     
     private func processAudio(base64Audio: String) {
             isProcessing = true
@@ -136,6 +156,8 @@ struct VoiceInteractionView: View {
             }
         }
     }
+    
+    
     
     private func displayContentLetterByLetter() {
         displayedContent = "" // Reset the displayed content
@@ -209,13 +231,6 @@ struct PulsatingCircle: View {
         }
     }
 }
-
-
-//struct VoiceInteractionView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        VoiceInteractionView()
-//    }
-//}
 
 extension Color {
     init(hex: UInt, alpha: Double = 1.0) {
