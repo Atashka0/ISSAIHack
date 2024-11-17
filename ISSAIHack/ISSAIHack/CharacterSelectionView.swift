@@ -343,10 +343,10 @@ struct CharacterSelectionView: View {
                                         .padding()
                                     }
                                 } else {
-                                    Text("Кейіпкерлерді қалыптастыру әлі де жалғасуда.")
-                                        .font(.body)
-                                        .foregroundColor(.black)
-                                        .padding()
+//                                    Text("Кейіпкерлерді қалыптастыру әлі де жалғасуда.")
+//                                        .font(.body)
+//                                        .foregroundColor(.black)
+//                                        .padding()
                                 }
                             }
                         }
@@ -428,11 +428,12 @@ struct CharacterCardView: View {
             } else {
                 VStack {
                     Spacer()
+                    LottieView(animationName: "creation.lottie", isPlaying: $isPlaying)
                     Text(character.name)
                         .foregroundColor(.white)
                         .font(.title)
-                        .padding(.top, 10)
-                    LottieView(animationName: "creation.lottie", isPlaying: $isPlaying)
+                        .padding(.top, -100)
+                    Spacer()
                     Spacer()
                 }
             }
