@@ -1,6 +1,8 @@
 # Team Wombats. Submission for ISSAI Hack 2024. 
 This is a frontend app repository. Backend app repo link: [Aniyar/issai-hack](https://github.com/Aniyar/issai-hack)
 
+Presentation: https://docs.google.com/presentation/d/1no9IKr6b_LmyXw1tniL8ISYJ40zdbkLbn94OgT-uido/edit?usp=sharing
+
 Video Demo: https://drive.google.com/file/d/1yrVakAzoiYzXv7xqK4v2yrtwTtsIkMcG/view?usp=sharing
 
 ## Technologies used:
