@@ -24,7 +24,7 @@ Attachments from App:
 <img width="354" alt="image" src="https://github.com/user-attachments/assets/7e0c84f7-8c00-4337-9f86-1d1ee01991cf">
 <img width="348" alt="image" src="https://github.com/user-attachments/assets/a79ab797-6153-43d9-ba97-cc614cf4d0fb">
 <img width="350" alt="image" src="https://github.com/user-attachments/assets/07560576-aeb3-461b-9583-59246d25bd76">
-<img width="355" alt="image" src="https://github.com/user-attachments/assets/9b40c101-bdb8-46d2-ad5c-928630543501">
+<img width="351" alt="image" src="https://github.com/user-attachments/assets/a46c44c6-cb47-4ca8-98b3-d087f4dc83e1">
 <img width="355" alt="image" src="https://github.com/user-attachments/assets/e9b26222-581f-454c-a282-978e98352653">
 
 
