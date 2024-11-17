@@ -48,7 +48,9 @@ class CharacterAPI {
     }
     
 
-    func createAssistant(name: String, description: String, fileData: Data, completion: @escaping (Result<Int, Error>) -> Void) {
+    func createAssistant(name: String, description: String, gender: String, fileData: Data, completion: @escaping (Result<Character, Error>) -> Void) {
+        let baseURL = "http://138.68.72.84:8089/api/assistant/create"
+        
         guard let url = URL(string: baseURL) else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
             return
@@ -71,6 +73,10 @@ class CharacterAPI {
         body.append("\(description)\r\n".data(using: .utf8)!)
         
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"gender\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(gender)\r\n".data(using: .utf8)!)
+        
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"file\"; filename=\"file.jpg\"\r\n".data(using: .utf8)!)
         body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
         body.append(fileData)
@@ -85,14 +91,27 @@ class CharacterAPI {
                 completion(.failure(error))
                 return
             }
-
-            if let httpResponse = response as? HTTPURLResponse {
-                completion(.success(httpResponse.statusCode))
-            } else {
-                completion(.failure(NSError(domain: "Invalid Response", code: -1, userInfo: nil)))
+            
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+                completion(.failure(NSError(domain: "HTTP Error", code: statusCode, userInfo: nil)))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "No Data", code: -1, userInfo: nil)))
+                return
+            }
+            
+            do {
+                let character = try JSONDecoder().decode(Character.self, from: data)
+                completion(.success(character))
+            } catch {
+                completion(.failure(error))
             }
         }.resume()
     }
+
 }
 
 extension Data {

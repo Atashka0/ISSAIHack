@@ -46,6 +46,7 @@ struct AddCharacterCardView: View {
 struct AddCharacterForm: View {
     @Binding var characters: [Character]
     @Binding var selectedImage: UIImage?
+    @State private var gender: String = "male"
 
     @State private var name: String = ""
     @State private var description: String = ""
@@ -58,7 +59,7 @@ struct AddCharacterForm: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 20) {
-                Text("Add New Character")
+                Text("Жаңа кейіпкер")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.top)
@@ -111,6 +112,13 @@ struct AddCharacterForm: View {
                                 .stroke(Color.black, lineWidth: 2)
                         )
                         .padding(.horizontal)
+                    
+                    Picker("Жынысы", selection: $gender) {
+                        Text("Еркек").tag("male")
+                        Text("Әйел").tag("female")
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding(.horizontal)
                 }
                 .padding(.vertical, 10)
 
@@ -162,14 +170,28 @@ struct AddCharacterForm: View {
     }
 
     private func addCharacter() {
-        guard let image = selectedImage else { return }
-//        let newCharacter = Character(
-//            id: characters.count + 1,
-//            name: name,
-//            videoURL: "data:image/png;base64,\(image.toBase64String())",
-//            voice: description
-//        )
-//        characters.append(newCharacter)
+        guard let image = selectedImage, let imageData = image.jpegData(compressionQuality: 0.8) else {
+            print("Invalid image data")
+            return
+        }
+
+        CharacterAPI().createAssistant(
+            name: name,
+            description: description,
+            gender: gender,
+            fileData: imageData
+        ) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let character):
+                    print("ADDED")
+                    characters.append(character)
+                    
+                case .failure(let error):
+                    print("Failed to add character: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 }
 
@@ -179,17 +201,21 @@ struct CharacterSelectionView: View {
     @State private var characters: [Character] = []
     @State private var isLoading = true
     @State private var errorMessage: String? = nil
-
-//    @State private var characters: [Character] = [
-//        Character(id: 141, name: "Томирис", videoURL: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif", voice: "Female"),
-//        Character(id: 142, name: "Ер Төстік", videoURL: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif", voice: "Male"),
-//        Character(id: 143, name: "Бәйтерек", videoURL: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif", voice: "Female")
-//    ]
-
+    @State private var timer: Timer?
+    
     var body: some View {
         ZStack {
             if isLoading {
-                ProgressView("Loading characters...")
+                ProgressView("Таңбалар жүктелуде...")
+                    .font(.title)
+                    .foregroundColor(.white)
+                    .background {
+                        Image("soyleWallpaper")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: UIScreen.main.bounds.height + 50)
+                            .ignoresSafeArea()
+                    }
             } else if let errorMessage = errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
@@ -218,32 +244,38 @@ struct CharacterSelectionView: View {
                         Spacer()
                         
                         if selectedCharacterIndex < characters.count {
-                            NavigationLink(
-                                destination: VoiceInteractionView(character: characters[selectedCharacterIndex]),
-                                isActive: $navigateToVoiceInteraction
-                            ) {
-                                Button(action: {
-                                    navigateToVoiceInteraction = true
-                                }) {
-                                    Text("Растау")
-                                        .font(.title2)
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .frame(maxWidth: .infinity)
-                                        .background(
-                                                Image("woodBackground") 
+                            let selectedCharacter = characters[selectedCharacterIndex]
+                            
+                            if selectedCharacter.status == "COMPLETED" {
+                                NavigationLink(
+                                    destination: VoiceInteractionView(character: selectedCharacter),
+                                    isActive: $navigateToVoiceInteraction
+                                ) {
+                                    Button(action: {
+                                        navigateToVoiceInteraction = true
+                                    }) {
+                                        Text("Растау")
+                                            .font(.title2)
+                                            .foregroundColor(.white)
+                                            .padding()
+                                            .frame(maxWidth: .infinity)
+                                            .background(
+                                                Image("woodBackground")
                                                     .resizable()
                                                     .scaledToFill()
                                             )
-                                        .cornerRadius(10)
-                                        .padding(.horizontal)
+                                            .cornerRadius(10)
+                                            .padding(.horizontal)
+                                    }
                                 }
+                            } else {
+                                Text("Character generation is still in progress.")
+                                    .font(.body)
+                                    .foregroundColor(.black)
+                                    .padding()
                             }
                         } else {
-//                            Text("Please select a valid character.")
-//                                .font(.title)
-//                                .foregroundColor(.white)
-//                                .padding()
+                            
                         }
                     }
                     .background {
@@ -256,25 +288,44 @@ struct CharacterSelectionView: View {
                 }
             }
         }
-        .onAppear(perform: fetchCharacters)
+        .onAppear {
+            fetchCharacters(firstTime: true)
+            startAutoRefresh()
+        }
+        .onDisappear {
+            stopAutoRefresh()
+        }
     }
+    private func startAutoRefresh() {
+            timer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { _ in
+                fetchCharacters(firstTime: false)
+            }
+        }
+
+        private func stopAutoRefresh() {
+            timer?.invalidate()
+            timer = nil
+        }
     
-    private func fetchCharacters() {
+    
+    private func fetchCharacters(firstTime: Bool) {
+        if firstTime {
             isLoading = true
-            errorMessage = nil
-            
-            CharacterAPI().fetchCharacters { result in
-                DispatchQueue.main.async {
-                    isLoading = false
-                    switch result {
-                    case .success(let fetchedCharacters):
-                        characters = fetchedCharacters
-                    case .failure(let error):
-                        errorMessage = "Failed to load characters: \(error.localizedDescription)"
-                    }
+        }
+        errorMessage = nil
+        
+        CharacterAPI().fetchCharacters { result in
+            DispatchQueue.main.async {
+                isLoading = false
+                switch result {
+                case .success(let fetchedCharacters):
+                    characters = fetchedCharacters
+                case .failure(let error):
+                    errorMessage = "Failed to load characters: \(error.localizedDescription)"
                 }
             }
         }
+    }
 }
 
 struct CharacterCardView: View {
@@ -282,19 +333,28 @@ struct CharacterCardView: View {
 
     var body: some View {
         VStack {
-            AnimatedImage(url: URL(string: character.gifUrl ?? ""))
-                .resizable()
-                .scaledToFill()
-                .frame(width: 300, height: 300)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.black, lineWidth: 4))
-                .shadow(radius: 10)
-                .padding()
+            if character.status == "COMPLETED" {
+                AnimatedImage(url: URL(string: character.gifUrl ?? ""))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 300, height: 300)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.black, lineWidth: 4))
+                    .shadow(radius: 10)
+                    .padding()
 
-            Text(character.name)
-                .foregroundColor(.white)
-                .font(.title)
-                .padding(.top, 10)
+                Text(character.name)
+                    .foregroundColor(.white)
+                    .font(.title)
+                    .padding(.top, 10)
+            } else {
+                VStack {
+                    Text(character.name)
+                        .foregroundColor(.white)
+                        .font(.title)
+                        .padding(.top, 10)
+                }
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 20)
