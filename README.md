@@ -1,9 +1,13 @@
 # Team Wombats. Submission for ISSAI Hack 2024. 
-This is a frontend app repository. Backend app repo link: [Aniyar/issai-hack](https://github.com/Aniyar/issai-hack)
+This is a frontend app repository. 
 
-Presentation: https://docs.google.com/presentation/d/1no9IKr6b_LmyXw1tniL8ISYJ40zdbkLbn94OgT-uido/edit?usp=sharing
+Backend app repo link: [Aniyar/issai-hack](https://github.com/Aniyar/issai-hack)
 
-Video Demo: https://drive.google.com/file/d/1yrVakAzoiYzXv7xqK4v2yrtwTtsIkMcG/view?usp=sharing
+Video link: [google drive](https://drive.google.com/file/d/1yrVakAzoiYzXv7xqK4v2yrtwTtsIkMcG/view?usp=sharing)
+
+Swagger link: [remote server](http://138.68.72.84:8089/swagger-ui/index.html#/Assistant%20Endpoints/getAssistants)
+
+Presentation Link: [google slides](https://docs.google.com/presentation/d/1no9IKr6b_LmyXw1tniL8ISYJ40zdbkLbn94OgT-uido/edit?usp=sharing)
 
 ## Technologies used:
 - SwiftUI
