@@ -330,6 +330,7 @@ struct CharacterSelectionView: View {
 
 struct CharacterCardView: View {
     let character: Character
+    @State var isPlaying: Bool = true
 
     var body: some View {
         VStack {
@@ -349,10 +350,13 @@ struct CharacterCardView: View {
                     .padding(.top, 10)
             } else {
                 VStack {
+                    Spacer()
                     Text(character.name)
                         .foregroundColor(.white)
                         .font(.title)
                         .padding(.top, 10)
+                    LottieView(animationName: "creation.lottie", isPlaying: $isPlaying)
+                    Spacer()
                 }
             }
         }
