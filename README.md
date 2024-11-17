@@ -21,7 +21,8 @@ Video Demo: https://drive.google.com/file/d/1yrVakAzoiYzXv7xqK4v2yrtwTtsIkMcG/vi
 Attachments from App:
 
 <img width="351" alt="image" src="https://github.com/user-attachments/assets/2d8d1ba1-356f-40e1-85ea-17b56cef6236">
-<img width="351" alt="image" src="https://github.com/user-attachments/assets/e7d7c56f-9066-4050-ad91-cfd9bf35ea7e">
+<img width="351" alt="image" src="https://github.com/user-attachments/assets/7a43c0b4-ac13-44a8-aed6-24b748394982">
+
 
 
 
