@@ -112,25 +112,24 @@ struct VoiceInteractionView: View {
         }
     
     private func createInteractionWithKazLLM(text: String) {
-            let assistantID = 84
             
-            kazLLMAPI.createInteraction(assistantID: assistantID, textPrompt: text + " бір сөзбен жауап бер") { interactionResult in
-                DispatchQueue.main.async {
-                    switch interactionResult {
-                    case .success(let interactionResponse):
-                        print("CREATED INTERACTION")
-                        self.synthesizeResponse(interactionResponse.vllmResponse.content)
-                    case .failure(let error):
-                        self.isProcessing = false
-                    }
+        kazLLMAPI.createInteraction(assistantID: character.externalId, textPrompt: text + " бір сөзбен жауап бер") { interactionResult in
+            DispatchQueue.main.async {
+                switch interactionResult {
+                case .success(let interactionResponse):
+                    print("CREATED INTERACTION")
+                    self.synthesizeResponse(interactionResponse.vllmResponse.content)
+                case .failure(let error):
+                    self.isProcessing = false
                 }
             }
         }
+    }
     
     private func synthesizeResponse(_ string: String) {
         print("UNICODE")
         print(string)
-        soyleAPI.translateText(sourceLanguage: "kaz", targetLanguage: "kaz", text: string) { result in
+        soyleAPI.translateText(sourceLanguage: "kaz", targetLanguage: "kaz", text: string, gender: character.gender) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let audioBase16):

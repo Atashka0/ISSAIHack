@@ -1,8 +1,7 @@
 import Foundation
 
 struct SoyleAPI {
-    private let baseAudioURL = "https://soyle.nu.edu.kz/api/translate/audio/?output_format=text&output_voice=male"
-    private let baseTextURL = "https://soyle.nu.edu.kz/api/translate/text/?output_format=audio&output_voice=male"
+    private let baseAudioURL = "https://soyle.nu.edu.kz/api/translate/audio/?output_format=text"
     private let apiKey = "C4O6EJmnOuO2kbWmDLW3vg"
     
     func translateAudio(
@@ -67,8 +66,10 @@ struct SoyleAPI {
         sourceLanguage: String,
         targetLanguage: String,
         text: String,
+        gender: String,
         completion: @escaping (Result<String, Error>) -> Void
     ) {
+        let baseTextURL = "https://soyle.nu.edu.kz/api/translate/text/?output_format=audio&output_voice=\(gender)"
         guard let url = URL(string: baseTextURL) else {
             completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
             return
@@ -122,14 +123,14 @@ struct SoyleAPI {
         task.resume()
     }
     
-    func checkAPI() {
-        self.translateText(sourceLanguage: "rus", targetLanguage: "rus", text: "Я тебя так сильно люблю") { res in
-            switch res {
-            case .success(let translatedText):
-                print("Translated Text: \(translatedText)")
-            case .failure(let error):
-                print("Error: \(error.localizedDescription)")
-            }
-        }
-    }
+//    func checkAPI() {
+//        self.translateText(sourceLanguage: "rus", targetLanguage: "rus", text: "Я тебя так сильно люблю") { res in
+//            switch res {
+//            case .success(let translatedText):
+//                print("Translated Text: \(translatedText)")
+//            case .failure(let error):
+//                print("Error: \(error.localizedDescription)")
+//            }
+//        }
+//    }
 }
