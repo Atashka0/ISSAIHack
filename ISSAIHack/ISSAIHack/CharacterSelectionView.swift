@@ -288,7 +288,7 @@ struct CharacterCardView: View {
 
     var body: some View {
         VStack {
-            AnimatedImage(url: URL(string: character.gifUrl))
+            AnimatedImage(url: URL(string: character.gifUrl ?? ""))
                 .resizable()
                 .scaledToFill()
                 .frame(width: 300, height: 300)

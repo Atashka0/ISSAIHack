@@ -145,7 +145,6 @@ struct KazLLMAPI {
     }
 }
 
-// Models for Decoding
 struct Assistant: Codable {
     let id: Int
     let name: String

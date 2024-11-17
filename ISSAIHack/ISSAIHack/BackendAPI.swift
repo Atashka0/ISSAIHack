@@ -5,12 +5,13 @@ struct Character: Decodable {
     let createdAt: String
     let name: String
     let description: String
-    let promptText: String
-    let gifUrl: String
-    let videoUrl: String
-    let photoUrl: String
-    let externalId: Int
+    let promptText: String?
+    let gifUrl: String?
+    let videoUrl: String?
+    let photoUrl: String?
+    let externalId: Int?
     let gender: String
+    let status: String
 }
 
 class CharacterAPI {

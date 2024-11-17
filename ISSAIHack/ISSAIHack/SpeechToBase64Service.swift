@@ -4,12 +4,10 @@ import Combine
 
 @MainActor
 final class AudioService: NSObject, ObservableObject {
-    // Published properties for UI updates
     @Published var isRecording = false
     @Published var isPlaying = false
     @Published var base64Audio: String = ""
 
-    // Private properties for recorder and player
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVAudioPlayer?
     private let recordingSession = AVAudioSession.sharedInstance()
@@ -130,8 +128,6 @@ final class AudioService: NSObject, ObservableObject {
         }
     }
 
-    /// Plays audio from the provided Base64-encoded string.
-    /// - Parameter base64String: The Base64-encoded audio data.
     func playAudio(fromBase64 base64String: String) {
         Task {
             await playAudioAsync(fromBase64: base64String)

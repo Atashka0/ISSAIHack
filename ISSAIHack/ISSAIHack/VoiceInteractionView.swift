@@ -16,7 +16,7 @@ struct VoiceInteractionView: View {
     @State private var timer: Timer? = nil
     
     private let lottieAnimationName: String = "abay.mp4.lottie"
-    private let gifURL = URL(string: "https://resource2.heygen.ai/video/gifs/82c311f7b05d467a9df1c2bd66531b40.gif")!
+
     let kazLLMAPI = KazLLMAPI()
     let soyleAPI = SoyleAPI()
    
@@ -29,10 +29,9 @@ struct VoiceInteractionView: View {
                     .ignoresSafeArea()
                     .ignoresSafeArea()
                 VStack {
-                    // Main content
                     Spacer()
                     Spacer()
-                    AnimatedImage(url: URL(string: character.gifUrl), isAnimating: $speechService.isPlaying)
+                    AnimatedImage(url: URL(string: character.gifUrl ?? ""), isAnimating: $speechService.isPlaying)
                         .resizable()
                         .scaledToFill()
                         .frame(width: 300, height: 300)
@@ -46,10 +45,10 @@ struct VoiceInteractionView: View {
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
                             .padding()
-                            .frame(maxWidth: .infinity) // Allow text to take full width
+                            .frame(maxWidth: .infinity)
                     }
-                    .frame(height: 150) // Limit the height of the text view
-                    .background(Color.black.opacity(0.3)) // Optional background for contrast
+                    .frame(height: 150)
+                    .background(Color.black.opacity(0.3))
                     .cornerRadius(10)
                     .padding(.horizontal)
 
@@ -76,14 +75,13 @@ struct VoiceInteractionView: View {
                     speechService.stopRecording()
                 }
 
-                // Custom Back Button
                 VStack {
                     HStack {
                         Button(action: {
-                            presentationMode.wrappedValue.dismiss() // Dismiss the current view
+                            presentationMode.wrappedValue.dismiss()
                         }) {
                             ZStack {
-                                Image("woodBackground") // Use the custom background image
+                                Image("woodBackground")
                                     .resizable()
                                     .scaledToFill()
                                     .frame(width: 40, height: 40)
@@ -109,8 +107,6 @@ struct VoiceInteractionView: View {
             isProcessing = true
             translatedText = ""
             
-            // Translate the audio to text
-            print("PROCESSED AUDIO")
             soyleAPI.translateAudio(targetLanguage: "kaz", audioBase64: base64Audio) { result in
                 DispatchQueue.main.async {
                     switch result {
@@ -127,7 +123,7 @@ struct VoiceInteractionView: View {
     
     private func createInteractionWithKazLLM(text: String) {
             
-        kazLLMAPI.createInteraction(assistantID: character.externalId, textPrompt: text + " бір сөзбен жауап бер") { interactionResult in
+        kazLLMAPI.createInteraction(assistantID: character.externalId ?? 84, textPrompt: text + " бір сөзбен жауап бер") { interactionResult in
             DispatchQueue.main.async {
                 switch interactionResult {
                 case .success(let interactionResponse):
